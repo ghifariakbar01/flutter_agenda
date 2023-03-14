@@ -1,0 +1,47 @@
+name: login
+description: A new Flutter project.
+
+environment:
+  sdk: ">=2.17.0 <3.0.2"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cached_network_image: ^3.2.0
+  cupertino_icons: ^0.1.0
+  cloud_firestore: ^4.4.4
+  firebase_core: ^2.7.1
+  firebase_storage: ^11.0.15
+  flutter_image_compress: ^1.1.0
+  flutter_isolate: ^2.0.2
+  flutter_local_notifications: ^12.0.0
+  flutter_riverpod: ^2.0.2
+  freezed: ^2.3.2
+  firebase_auth: ^4.2.10
+  freezed_annotation: ^2.2.0
+  get: ^4.6.5
+  image_picker: ^0.8.5
+  json_annotation: ^4.7.0
+  keyboard_dismisser: ^3.0.0
+  path_provider: ^2.0.10
+  flutter_slidable: ^2.0.0
+  shared_preferences: ^2.0.0
+  workmanager: ^0.5.0
+
+dev_dependencies:
+  build_runner: ^2.3.3
+  flutter_test:
+    sdk: flutter
+  json_serializable: ^6.5.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/pic/
+    - assets/box/
+
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/Nunito.ttf
