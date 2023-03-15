@@ -51,6 +51,7 @@ class _UserFormState extends ConsumerState<UserForm> {
     fotoProfil = user.fotoProfil;
 
     print('INIT HERE');
+
     super.initState();
   }
 
@@ -59,7 +60,7 @@ class _UserFormState extends ConsumerState<UserForm> {
     final user = widget.user;
     final userId = "fvcZjC3UL5M2T2WkbOdg";
 
-    final fotoUpload = ref.watch(fileStorageProvider.notifier);
+    final fotoUpload = ref.watch(fileStorageProvider);
 
     final isemailPasswordChanged = ref.watch(isEmaillPassChangedProvider);
 
@@ -80,9 +81,7 @@ class _UserFormState extends ConsumerState<UserForm> {
                     child: ClipRRect(
                         borderRadius: BorderRadius.circular(72),
                         child: VNetworkImage(
-                          url: isUpload
-                              ? ref.read(fileStorageProvider.notifier).text
-                              : fotoProfil,
+                          url: fotoUpload.downloadUrl,
                           height: 144,
                           width: 144,
                         )),
@@ -97,31 +96,32 @@ class _UserFormState extends ConsumerState<UserForm> {
                       await uploadImageDialog(
                           onImgPick:
                               ref.read(fileStorageProvider.notifier).onImgPick,
-                          onDone: ref
-                              .read(fireStoreProvider.notifier)
-                              .updateData(
-                                  'users',
-                                  userId,
-                                  UserModel(
-                                          namaDepan: namaDepan.text,
-                                          namaBelakang: namaBelakang.text,
-                                          email: email.text,
-                                          password: password.text,
-                                          tanggalLahir: tanggalLahir.text,
-                                          jenisKelamin: jenisKelamin.text,
-                                          fotoProfil: ref
-                                              .read(
-                                                  fileStorageProvider.notifier)
-                                              .text)
-                                      .toJson())
-                              .then((value) {
-                            setState(() {
-                              ref.refresh(getUserDataProvider);
-                              isUpload = true;
-                              FocusScope.of(context).unfocus();
-                              Get.back();
+                          onDone: () async {
+                            await ref
+                                .read(fireStoreProvider.notifier)
+                                .updateData(
+                                    'users',
+                                    userId,
+                                    UserModel(
+                                            namaDepan: namaDepan.text,
+                                            namaBelakang: namaBelakang.text,
+                                            email: email.text,
+                                            password: password.text,
+                                            tanggalLahir: tanggalLahir.text,
+                                            jenisKelamin: jenisKelamin.text,
+                                            fotoProfil: fotoUpload.downloadUrl)
+                                        .toJson())
+                                .then((value) {
+                              setState(() {
+                                print('fotoUpload.downloadUrl ' +
+                                    fotoUpload.downloadUrl);
+
+                                isUpload = true;
+                                print('isUpload $isUpload ');
+                                Get.back();
+                              });
                             });
-                          }));
+                          });
                     },
                     child: Container(
                       width: 30,
@@ -282,7 +282,9 @@ class _UserFormState extends ConsumerState<UserForm> {
                             password: password.text,
                             tanggalLahir: tanggalLahir.text,
                             jenisKelamin: jenisKelamin.text,
-                            fotoProfil: fotoUpload.text,
+                            fotoProfil: fotoUpload.isDone
+                                ? fotoUpload.downloadUrl
+                                : fotoUpload.imgPath,
                           );
 
                           if (isemailPasswordChanged.last == true) {

@@ -49,6 +49,7 @@ class _AgendaFormState extends ConsumerState<AgendaForm> {
   @override
   Widget build(BuildContext context) {
     final agendaDate = ref.watch(agendaDateNotifierProvider.notifier);
+    final upload = ref.watch(fileStorageProvider);
 
     final agendaDetail = ref.watch(getDetailAgendaById(agendaId));
 
@@ -107,40 +108,33 @@ class _AgendaFormState extends ConsumerState<AgendaForm> {
                                   onImgPick: ref
                                       .read(fileStorageProvider.notifier)
                                       .onImgPick,
-                                  onDone: ref
-                                      .read(fireStoreProvider.notifier)
-                                      .updateData(
-                                          'agenda',
-                                          agendaId,
-                                          AgendaModel(
-                                                  id: agendaId,
-                                                  title: judul.text,
-                                                  description: deskripsi.text,
-                                                  attached: lampiran.text,
-                                                  date: agenda.date,
-                                                  dateReminder:
-                                                      agendaDate.picked,
-                                                  backImage: '',
-                                                  imageUrl: ref
-                                                      .read(fileStorageProvider
-                                                          .notifier)
-                                                      .text)
-                                              .toJson())
-                                      .then((value) {
-                                    setState(() {
-                                      ref.refresh(
-                                          getDetailAgendaById(agendaId));
-                                      isUpload = true;
-                                      Get.back();
+                                  onDone: () async {
+                                    await ref
+                                        .read(fireStoreProvider.notifier)
+                                        .updateData(
+                                            'users',
+                                            agendaId,
+                                            AgendaModel(
+                                              id: agendaId,
+                                              title: judul.text,
+                                              description: deskripsi.text,
+                                              attached: lampiran.text,
+                                              date: agenda.date,
+                                              dateReminder: agendaDate.picked,
+                                              backImage: '',
+                                              imageUrl: upload.downloadUrl,
+                                            ).toJson())
+                                        .then((value) {
+                                      setState(() {
+                                        isUpload = true;
+                                        print('isUpload $isUpload ');
+                                        Get.back();
+                                      });
                                     });
-                                  }));
+                                  });
                             },
                             child: VNetworkImage(
-                                url: isUpload
-                                    ? ref
-                                        .read(fileStorageProvider.notifier)
-                                        .text
-                                    : agenda.imageUrl,
+                                url: upload.downloadUrl,
                                 height: 100,
                                 width: 100)),
                         Expanded(child: Container()),
@@ -165,12 +159,7 @@ class _AgendaFormState extends ConsumerState<AgendaForm> {
                                       date: agenda.date,
                                       dateReminder: agendaDate.picked,
                                       backImage: '',
-                                      imageUrl: isUpload
-                                          ? ref
-                                              .read(
-                                                  fileStorageProvider.notifier)
-                                              .text
-                                          : agenda.imageUrl,
+                                      imageUrl: upload.downloadUrl,
                                     ).toJson());
 
                             ref.refresh(fileStorageProvider);

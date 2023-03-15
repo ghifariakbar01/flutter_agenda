@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login/model/agenda_model.dart';
+import 'package:login/model/upload_model.dart';
 import 'package:login/model/user_model.dart';
 import 'package:login/provider/agenda/agenda_date_provider.dart';
 import 'package:login/provider/agenda/agenda_provider.dart';
@@ -40,8 +41,9 @@ final fireStoreProvider = StateNotifierProvider(
     (ref) => FireStoreProvider(FirebaseFirestore.instance));
 
 final fileStorageProvider =
-    StateNotifierProvider<FileStorageProvider, String>((ref) {
-  return FileStorageProvider('');
+    StateNotifierProvider.autoDispose<FileStorageProvider, UploadModel>((ref) {
+  return FileStorageProvider(
+      UploadModel(imgPath: '', isDone: false, downloadUrl: ''));
 });
 
 // ============= REQUEST =========== //
@@ -53,9 +55,14 @@ final getDetailAgendaById =
 });
 
 final getUserDataProvider = FutureProvider.autoDispose<UserModel>((ref) async {
+  final image = ref.watch(fileStorageProvider.notifier);
+
   final data = await ref
       .read(fireStoreProvider.notifier)
       .getUserById('users', 'fvcZjC3UL5M2T2WkbOdg');
+
+  image.setDownloadUrl(data.fotoProfil);
+
   return data;
 });
 

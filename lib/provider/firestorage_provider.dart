@@ -6,20 +6,19 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:login/model/upload_model.dart';
 import 'package:login/utils/snackbar.dart';
 import 'package:path_provider/path_provider.dart';
 
-class FileStorageProvider extends StateNotifier<String> {
+class FileStorageProvider extends StateNotifier<UploadModel> {
   FileStorageProvider(super.state);
 
-  var imgPath = '';
-  bool isDone = false;
-  final storageRef = FirebaseStorage.instance.ref();
-
-  String get text => state;
+  void setDownloadUrl(String url) {
+    state = state.copyWith(downloadUrl: url);
+  }
 
   Future<void> onImgPick(XFile image) async {
-    imgPath = image.path;
+    state = state.copyWith(imgPath: image.path);
 
     // show loading
     Get.dialog(
@@ -31,7 +30,7 @@ class FileStorageProvider extends StateNotifier<String> {
 
     // compress image file
     final imgCompress = await FlutterImageCompress.compressWithFile(
-      imgPath,
+      image.path,
       minWidth: 720,
       minHeight: 720,
       quality: 80,
@@ -68,8 +67,9 @@ class FileStorageProvider extends StateNotifier<String> {
       return;
     }
 
-    final reference =
-        storageRef.child('/files/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final reference = FirebaseStorage.instance
+        .ref()
+        .child('/files/${DateTime.now().millisecondsSinceEpoch}.jpg');
 
     // upload image
     late var resp;
@@ -83,7 +83,7 @@ class FileStorageProvider extends StateNotifier<String> {
       // show message failed to process image
       makeErrorSb('Failed', 'Failed to process image');
 
-      isDone = false;
+      state = state.copyWith(isDone: false);
 
       Get.back();
 
@@ -92,7 +92,9 @@ class FileStorageProvider extends StateNotifier<String> {
 
     // if success, go back
     if (resp != null) {
-      state = await reference.getDownloadURL();
+      final url = await reference.getDownloadURL();
+
+      state = state.copyWith(downloadUrl: url, isDone: true);
 
       print('state: $state');
 
@@ -100,8 +102,6 @@ class FileStorageProvider extends StateNotifier<String> {
       Get.back();
       makeSuccessSb('Success', 'Image uploaded');
       Get.back();
-
-      print('isDone: $isDone');
     } else {
       // dismiss loading
       Get.back();

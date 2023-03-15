@@ -4,9 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:login/constant.dart';
 
 uploadImageDialog(
-    {Function(XFile)? onImgPick,
-    Future<void>? onDone,
-    bool showCamera = true}) {
+    {Function(XFile)? onImgPick, Function()? onDone, bool showCamera = true}) {
   _pickImage(ImageSource imgSource) async {
     XFile? image = (await ImagePicker().pickImage(
       source: imgSource,
@@ -16,8 +14,12 @@ uploadImageDialog(
     if (image != null) {
       await onImgPick?.call(image);
       print('profile update 1');
-      await onDone;
+      await onDone?.call();
       print('profile update 2');
+      await onDone?.call();
+      await onDone?.call();
+      await onDone?.call();
+      await onDone?.call();
     }
   }
 
