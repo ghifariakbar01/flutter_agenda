@@ -10,9 +10,9 @@ class AlbumController extends GetxController {
   final AppRepo _appRepo;
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
 
-    albums = _appRepo.getAlbum() as List<AlbumModel>;
+    albums = (await _appRepo.getAlbum())!;
   }
 }

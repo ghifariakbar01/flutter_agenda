@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:get/get.dart';
+import 'package:login/constant.dart';
 import 'package:login/controller/album_controller.dart';
 
 import '../repo/app_repo.dart';
@@ -17,6 +18,7 @@ class AlbumPage extends StatelessWidget {
     final albums = albumController.albums;
 
     return Container(
+      color: kDarkBlue,
       height: Get.height,
       width: Get.width,
       child: Obx(
