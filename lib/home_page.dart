@@ -3,172 +3,77 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import 'package:login/controller/user_controller.dart';
 import 'package:login/login_page.dart';
-import 'package:login/provider/all_provider.dart';
-import 'package:login/provider/notif/notif_switch_provider.dart';
-import 'package:login/screens/profile_edit_page.dart';
-import 'package:login/widgets/agenda_grid.dart';
-import 'package:login/widgets/v_image.dart';
+import 'package:login/screens/album_page.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+import 'package:login/widgets/v_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class HomePage extends StatefulWidget {
   static String tag = 'home-page';
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
-  final _notifController = Get.put(IsNotifController());
+class _HomePageState extends State<HomePage> {
+  final UserController _userController = Get.find();
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(fireAuthProvider.notifier);
-    final userProvider = ref.watch(getUserDataProvider);
-    final timer = ref.watch(notifProvider.notifier).notif;
-    final isNotif = ref.watch(isSwitch);
-
-    final alucard = userProvider.when(
-        data: (user) {
-          return Hero(
-            tag: 'hero',
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 144.0,
-                height: 144.0,
-                child: Stack(
-                  children: [
-                    Align(
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          height: 144,
-                          width: 144,
-                          child: ClipRRect(
-                              borderRadius: BorderRadius.circular(72),
-                              child: VNetworkImage(
-                                url: user.fotoProfil,
-                                height: 144,
-                                width: 144,
-                              )),
-                        )),
-                    // edit profile
-                    Positioned(
-                      bottom: 0,
-                      right: -65,
-                      left: 0,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pushNamed(ProfileEditPage.tag);
-                        },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey.shade200,
-                          ),
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-        error: (e, s) => Text('$e $s'),
-        loading: () => Center(child: CircularProgressIndicator()));
+    final user = _userController.users[_userController.userSelected.value];
 
     final welcome = Padding(
       padding: EdgeInsets.all(8.0),
       child: Text(
-        'Welcome ${user.getUser?.email}',
+        'Welcome ${user.email}',
         style: TextStyle(fontSize: 28.0, color: Colors.white),
       ),
     );
 
-    final dropdown = Padding(
+    final address = Padding(
       padding: EdgeInsets.all(8.0),
-      child: DropdownButton<String>(
-        value: timer.toString(),
-        icon: const Icon(Icons.arrow_downward),
-        iconSize: 24,
-        elevation: 16,
-        style: const TextStyle(color: Colors.deepPurple),
-        underline: Container(
-          height: 2,
-          color: Colors.deepPurpleAccent,
-        ),
-        onChanged: (String? newValue) {
-          setState(() {
-            ref.read(notifProvider.notifier).setNotif(int.parse(newValue!));
-          });
-        },
-        items: {1, 3, 24}.map<DropdownMenuItem<String>>((int value) {
-          return DropdownMenuItem<String>(
-            value: value.toString(),
-            child: Text(value.toString()),
-          );
-        }).toList(),
+      child: Text(
+        'Address: ${user.address?.street}, ${user.address?.suite}, ${user.address?.city}, ${user.address?.zipcode}',
+        style: TextStyle(fontSize: 28.0, color: Colors.white),
       ),
     );
 
-    final lorem = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: isNotif.when(
-            data: (notif) {
-              return Switch(
-                value: notif,
-                onChanged: (value) {
-                  // get alert dialog
-                  Get.dialog(
-                    AlertDialog(
-                      title: Text('Restart?'),
-                      content: Text(
-                          'You will get notification ${ref.watch(notifProvider.notifier).notif} hours before the event\n\n To do this you must restart so notification initialize.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Get.back();
-                          },
-                          child: Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            Get.dialog(
-                              Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                            await _notifController.toggleNotif(
-                                ref.watch(notifProvider.notifier).notif);
+    final phone = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text(
+        'Phone: ${user.phone}',
+        style: TextStyle(fontSize: 28.0, color: Colors.white),
+      ),
+    );
 
-                            Get.back();
-                            exit(0);
-                          },
-                          child: Text('Ok'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-            error: (e, s) => Container(),
-            loading: () => const Center(child: CircularProgressIndicator())));
+    final website = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text(
+        'Website: ${user.website}',
+        style: TextStyle(fontSize: 28.0, color: Colors.white),
+      ),
+    );
 
-    final agendaGrid = AgendaGrid();
+    final company = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text(
+        'Company: ${user.company?.name}, ${user.company?.catchPhrase}, ${user.company?.bs}',
+        style: TextStyle(fontSize: 28.0, color: Colors.white),
+      ),
+    );
 
     final logout = Padding(
       padding: EdgeInsets.all(8.0),
       child: ElevatedButton(
         onPressed: () async {
-          await ref.read(fireAuthProvider.notifier).signOut();
-          Navigator.of(context).pushReplacementNamed(LoginPage.tag);
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setBool('login', false);
+
+          _userController.userSelected.value = 0;
+
+          Get.offAll(() => LoginPage());
         },
         child: Text('Logout'),
       ),
@@ -186,19 +91,53 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       child: ListView(
         physics: const BouncingScrollPhysics(),
-        children: <Widget>[
-          alucard,
-          welcome,
-          dropdown,
-          lorem,
-          agendaGrid,
-          logout
-        ],
+        children: <Widget>[welcome, address, phone, website, company, logout],
       ),
     );
 
     return Scaffold(
-      body: user.getUser != null ? body : LoginPage(),
-    );
+        body: body,
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                child: Text('User'),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
+              ),
+              ListTile(
+                title: Text('User'),
+                onTap: () async {
+                  Get.to(() => HomePage());
+                },
+              ),
+              ListTile(
+                title: Text('Album'),
+                onTap: () async {
+                  Get.to(() => AlbumPage());
+                },
+              ),
+              ListTile(
+                title: Text('Location'),
+                onTap: () async {
+                  // Get.to(() => LocationPage());
+                },
+              ),
+              ListTile(
+                title: Text('Logout'),
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  prefs.setBool('login', false);
+
+                  _userController.userSelected.value = 0;
+
+                  Get.offAll(() => LoginPage());
+                },
+              ),
+            ],
+          ),
+        ));
   }
 }

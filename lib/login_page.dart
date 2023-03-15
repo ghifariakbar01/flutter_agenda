@@ -2,18 +2,21 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
+import 'package:login/controller/user_controller.dart';
 import 'package:login/home_page.dart';
-import 'package:login/provider/all_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
+class LoginPage extends StatefulWidget {
   static String tag = 'login-page';
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends State<LoginPage> {
+  final _userController = Get.find<UserController>();
+
   final emailController = TextEditingController();
-  final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
   @override
@@ -46,31 +49,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     );
 
-    final password = TextFormField(
-      controller: passwordController,
-      autofocus: false,
-      obscureText: true,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter password';
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        hintText: 'Password',
-        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
-      ),
-    );
-
     final autoFill = FlatButton(
         child: Text(
           'Auto Fill',
           style: TextStyle(color: Colors.black54),
         ),
         onPressed: () {
-          emailController.text = 'candidate@deptechdigital.com';
-          passwordController.text = 'testInterview123!';
+          emailController.text = 'Sincere@april.biz';
         });
 
     final loginButton = Padding(
@@ -81,18 +66,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
         onPressed: () async {
           if (formKey.currentState?.validate() == false) return;
-          final res = await ref
-              .read(fireAuthProvider.notifier)
-              .signIn(emailController.text, passwordController.text);
-          if (res) {
-            print('res is true');
-            await ref
-                .read(fireStoreProvider.notifier)
-                .getUserById('users', 'fvcZjC3UL5M2T2WkbOdg');
+          final res = _userController.searchUser(emailController.text);
 
-            Navigator.of(context).pushNamed(HomePage.tag);
+          if (res != null) {
+            Get.to(HomePage());
+
+            _userController.userSelected.value = res.id ?? 0;
+
+            await SharedPreferences.getInstance().then((prefs) {
+              prefs.setBool('login', true);
+            });
+
+            Get.snackbar('Success', 'User found');
+          } else {
+            Get.snackbar('Error', 'User not found');
           }
-          print('res is $res');
         },
         padding: EdgeInsets.all(12),
         color: Colors.lightBlueAccent,
@@ -113,8 +101,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               logo,
               SizedBox(height: 48.0),
               email,
-              SizedBox(height: 8.0),
-              password,
               SizedBox(height: 8.0),
               autoFill,
               loginButton,
