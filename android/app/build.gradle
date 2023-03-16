@@ -62,9 +62,9 @@ android {
     signingConfigs {
         release {
             storeFile file('keystore.jks')
-            storePassword 'deptech'
-            keyPassword 'deptech'
-            keyAlias 'deptech'
+            storePassword 'bountie2022'
+            keyPassword 'bountie2022'
+            keyAlias 'bountie'
         }
     }
 
