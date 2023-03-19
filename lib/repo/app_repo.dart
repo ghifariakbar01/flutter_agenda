@@ -26,7 +26,7 @@ class AppRepo implements AppInterface {
 
   Future<List<AlbumModel>?> getAlbum() async {
     final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
+        .get(Uri.parse('https://jsonplaceholder.typicode.com/photos'));
     if (response.statusCode == 200) {
       return (jsonDecode(response.body) as List)
           .map((e) => AlbumModel.fromJson(e))

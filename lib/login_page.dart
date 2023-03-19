@@ -3,24 +3,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:login/controller/user_controller.dart';
+import 'package:login/controller/user_provider.dart';
 import 'package:login/home_page.dart';
+import 'package:login/model/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   static String tag = 'login-page';
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _userController = Get.find<UserController>();
-
+class _LoginPageState extends ConsumerState<LoginPage> {
   final emailController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userStateNotifierProvider);
+
     final logo = Hero(
       tag: 'hero',
       child: CircleAvatar(
@@ -66,20 +67,27 @@ class _LoginPageState extends State<LoginPage> {
         ),
         onPressed: () async {
           if (formKey.currentState?.validate() == false) return;
-          final res = _userController.searchUser(emailController.text);
+          try {
+            await ref
+                .read(userStateNotifierProvider.notifier)
+                .setUserByEmail((emailController.text));
 
-          if (res != null) {
-            Get.to(HomePage());
+            if (user != UserModel()) {
+              Get.to(() => HomePage());
 
-            _userController.userSelected.value = res.id ?? 0;
+              await SharedPreferences.getInstance().then((prefs) {
+                prefs.setBool('login', true);
+              });
 
-            await SharedPreferences.getInstance().then((prefs) {
-              prefs.setBool('login', true);
-            });
-
-            Get.snackbar('Success', 'User found');
-          } else {
-            Get.snackbar('Error', 'User not found');
+              Get.snackbar('Success', 'User found');
+              return;
+            } else {
+              Get.snackbar('Error', 'User not found');
+              return;
+            }
+          } catch (e) {
+            Get.snackbar('Error', '$e');
+            return;
           }
         },
         padding: EdgeInsets.all(12),

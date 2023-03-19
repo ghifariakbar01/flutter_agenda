@@ -14,5 +14,11 @@ class AlbumController extends GetxController {
     super.onReady();
 
     albums = (await _appRepo.getAlbum())!;
+
+    print('albums url ${albums[0].thumbnailUrl}');
+  }
+
+  init() async {
+    albums = (await _appRepo.getAlbum())!;
   }
 }

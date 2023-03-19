@@ -1,149 +1,174 @@
-import 'dart:io';
-
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:login/controller/user_controller.dart';
-import 'package:login/login_page.dart';
-import 'package:login/screens/album_page.dart';
+import 'package:login/controller/user_provider.dart';
 
-import 'package:login/widgets/v_image.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:login/login_page.dart';
+import 'package:login/model/user_model.dart';
+import 'package:login/screens/album_page.dart';
 import 'package:login/screens/location_page.dart';
 
-class HomePage extends StatefulWidget {
+import 'package:login/widgets/v_label.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class HomePage extends ConsumerStatefulWidget {
   static String tag = 'home-page';
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final UserController _userController = Get.find();
+class _HomePageState extends ConsumerState<HomePage> {
+  var selectedIndex = 0;
+  final pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _userController.onReady();
-    });
-    return Obx(() {
-      final user = _userController.users[_userController.userSelected.value];
+    final user = ref.watch(userStateNotifierProvider);
 
-      final welcome = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          'Welcome ${user.email}',
-          style: TextStyle(fontSize: 28.0, color: Colors.white),
-        ),
-      );
+    final welcome = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          VLabel(label: 'Email'),
+          Text(
+            user.email ?? '',
+          ),
+        ],
+      ),
+    );
 
-      final address = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          'Address: ${user.address?.street}, ${user.address?.suite}, ${user.address?.city}, ${user.address?.zipcode}',
-          style: TextStyle(fontSize: 28.0, color: Colors.white),
-        ),
-      );
+    final address = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          VLabel(label: 'Address'),
+          Text(
+            '${user.address?.street}, ${user.address?.suite}, ${user.address?.city}, ${user.address?.zipcode}',
+          ),
+        ],
+      ),
+    );
 
-      final phone = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          'Phone: ${user.phone}',
-          style: TextStyle(fontSize: 28.0, color: Colors.white),
-        ),
-      );
+    final phone = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          VLabel(label: 'Phone'),
+          Text(
+            user.phone ?? '',
+          ),
+        ],
+      ),
+    );
 
-      final website = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          'Website: ${user.website}',
-          style: TextStyle(fontSize: 28.0, color: Colors.white),
-        ),
-      );
+    final website = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          VLabel(label: 'Website'),
+          Text(
+            user.website ?? '',
+          ),
+        ],
+      ),
+    );
 
-      final company = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          'Company: ${user.company?.name}, ${user.company?.catchPhrase}, ${user.company?.bs}',
-          style: TextStyle(fontSize: 28.0, color: Colors.white),
-        ),
-      );
+    final company = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          VLabel(label: 'Company'),
+          Text(
+            '${user.company?.name}, ${user.company?.catchPhrase}, ${user.company?.bs}',
+          ),
+        ],
+      ),
+    );
 
-      final logout = Padding(
-        padding: EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          onPressed: () async {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setBool('login', false);
+    final logout = Padding(
+      padding: EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        onPressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setBool('login', false);
 
-            _userController.userSelected.value = 0;
+          ref.read(userStateNotifierProvider.notifier).setUser(UserModel());
 
-            Get.offAll(() => LoginPage());
-          },
-          child: Text('Logout'),
-        ),
-      );
+          Get.offAll(() => LoginPage());
+        },
+        child: Text('Logout'),
+      ),
+    );
 
-      final body = Container(
-        width: double.infinity,
-        height: MediaQuery.of(context).size.height,
-        padding: EdgeInsets.all(28.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [
-            Colors.blue,
-            Colors.lightBlueAccent,
-          ]),
-        ),
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          children: <Widget>[welcome, address, phone, website, company, logout],
-        ),
-      );
-
-      return Scaffold(
-          body: body,
-          drawer: Drawer(
+    final body = Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [
+          Colors.blue,
+          Colors.lightBlueAccent,
+        ]),
+      ),
+      child: PageView(
+        controller: pageController,
+        onPageChanged: (index) {
+          setState(() => selectedIndex = index);
+        },
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  child: Text('User'),
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                  ),
-                ),
-                ListTile(
-                  title: Text('User'),
-                  onTap: () async {
-                    Get.to(() => HomePage());
-                  },
-                ),
-                ListTile(
-                  title: Text('Album'),
-                  onTap: () async {
-                    Get.to(() => AlbumPage());
-                  },
-                ),
-                ListTile(
-                  title: Text('Location'),
-                  onTap: () async {
-                    Get.to(() => LocationPage());
-                  },
-                ),
-                ListTile(
-                  title: Text('Logout'),
-                  onTap: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    prefs.setBool('login', false);
-
-                    _userController.userSelected.value = 0;
-
-                    Get.offAll(() => LoginPage());
-                  },
-                ),
+              physics: const BouncingScrollPhysics(),
+              children: <Widget>[
+                welcome,
+                address,
+                phone,
+                website,
+                company,
+                logout
               ],
             ),
-          ));
-    });
+          ),
+          AlbumPage(),
+          LocationPage(),
+        ],
+      ),
+    );
+
+    return Scaffold(
+      body: body,
+      bottomNavigationBar: BottomNavyBar(
+        selectedIndex: selectedIndex,
+        showElevation: true, // use this to remove appBar's elevation
+        onItemSelected: (index) => setState(() {
+          selectedIndex = index;
+
+          pageController.animateToPage(index,
+              duration: Duration(milliseconds: 300), curve: Curves.ease);
+        }),
+        items: [
+          BottomNavyBarItem(
+            icon: Icon(Icons.person),
+            title: Text('Home'),
+            activeColor: Colors.red,
+          ),
+          BottomNavyBarItem(
+              icon: Icon(Icons.photo),
+              title: Text('Album'),
+              activeColor: Colors.purpleAccent),
+          BottomNavyBarItem(
+              icon: Icon(Icons.pin_drop),
+              title: Text('Location'),
+              activeColor: Colors.pink),
+        ],
+      ),
+    );
   }
 }
